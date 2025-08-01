@@ -59,4 +59,3 @@ Some devices may require further testing or script adjustments:
 
 ---
 
-Let me know if you’d like to add contributor credits, commit links, or Sri Lanka operator-specific examples.
