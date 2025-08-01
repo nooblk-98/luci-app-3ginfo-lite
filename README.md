@@ -1,6 +1,4 @@
-Here's an updated `README.md` section that includes your contributions (fixing LTE-only registration issues and optimizing for Sri Lankan networks):
 
----
 
 # luci-app-3ginfo-lite
 
