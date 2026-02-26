@@ -11,72 +11,7 @@
 ><img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Luci-app-3ginfo-lite is a simplified version of the 3ginfo project. Works with mPCI-E/M.2 and USB 3G/LTE modems.   
 > <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Luci-app-3ginfo-lite jest uproszczoną wersją projektu 3ginfo. Działa z modemami mPCI-E/M.2 oraz USB 3G/LTE.
 
-### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> What You Should Know / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Co powinieneś wiedzieć
-> [!IMPORTANT]
-> My package will not work if you are using ModemManager.   
-> Preferred version OpenWrt >= 21.02.
->
-> Mój pakiet nie będzie działać jeżeli uzywasz ModemManager-a.   
-> Preferowana wersja OpenWrt >= 21.02.
-
-``` bash
-Supported devices (list may not be up to date):
-- ASKEY WWHC050
-- BroadMobi BM806U (DLINK DWR-921 C1)
-- DW5809e Dell Wireless 5809e Gobi 4G LTE Mobile Broadband Card (EM7305)
-- DW5811e Snapdragon X7 LTE (EM7455B)
-- DW5821e Snapdragon X20 LTE
-- Fibocom FM150-AE
-- Fibocom FM350-GL
-- Fibocom L860-GL
-- Huawei E3272/E3372/E3276
-- Mikrotik R11e-LTE
-- Mikrotik R11e-LTE6
-- NL952-EAU in ECM mode (LTE CAT18)
-- Qualcomm CDMA Technologies MSM
-- Quectel EC20-E
-- Quectel EC200T
-- Quectel EC25
-- Quectel EG06
-- Quectel EG18-EA
-- Quectel EM12-G
-- Quectel EM160R-GL
-- Quectel EP06
-- Quectel RG500Q-EA
-- Quectel RG502Q-EA
-- Quectel RM500Q-GL
-- Quectel RM500U-CNV
-- Quectel RM520N-GL
-- Sierra Wireless 320u
-- Sierra Wireless EM7455
-- Sierra Wireless EM9190
-- Sierra Wireless MC7710
-- SIMCOM SIM8200EA-M2
-- Thales Cinterion MV31-W
-- Telit LE910-EUG
-- Telit LN940 (QMI) / Telit LN940 (MBIM) / HP lt4220 (MBIM) / HP lt4220 (QMI)
-- Telit LN940-CP
-- YUGA CLM920-NC5
-- ZTE MF286
-- ZTE MF286A
-- ZTE MF286D
-- ZTE MF286R
-- ZTE MF289F
-- ZTE MF28D/MF290
-- ZTE MF821
- 
-Not tested devices (Not all data can be shown and scripts need to be corrected):
- - Fibocom FM150-AE
- - Sierra Wireless MC7710
- - Sierra Wireless EM9190
- - SIMCOM SIM8200EA-M2
- - ASKEY WWHC050
- - Mikrotik R11e-LTE
- - HiLink modems (ZTE / Alcatel)
-
-```
-
-
+### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> 
 ### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Installation / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Instalacja
 
 <details>
