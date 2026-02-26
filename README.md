@@ -13,5 +13,5 @@ Luci-app-3ginfo-lite is a simplified version of the 3ginfo project. Works with m
 
 ![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/luci-app-3ginfo-litemod.png?raw=true)
 
-## <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Thanks to  <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> 
+Thanks to  
 - [obsy (Cezary Jackiewicz)](https://github.com/obsy)
