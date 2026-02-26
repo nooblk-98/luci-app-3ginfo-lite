@@ -10,6 +10,10 @@
 >
 Luci-app-3ginfo-lite is a simplified version of the 3ginfo project. Works with mPCI-E/M.2 and USB 3G/LTE modems.   
 
+## Fixes
+
+- HBB not registering issue fixed in v1.0.76.
+
 
 ![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/luci-app-3ginfo-litemod.png?raw=true)
 
