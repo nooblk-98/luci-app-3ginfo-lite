@@ -145,7 +145,7 @@ jobs:
         include:
           - label:       "IPK — OpenWrt 24.10.5"
             sdk_version: "24.10.5"
-            sdk_url:     "https://archive.openwrt.org/releases/24.10.5/targets/x86/64openwrt-sdk-24.10.5-x86/64_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url:     "https://archive.openwrt.org/releases/24.10.5/targets/x86/64/openwrt-sdk-24.10.5-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
             sdk_dir:     "sdk"
             out_dir:     "output"
             pkg_ext:     "ipk"
