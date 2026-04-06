@@ -68,7 +68,14 @@ jobs:
           # ── resolve makefile path ─────────────────────────────────────────────
           MK_PATH="${{ inputs.makefile_path }}"
           if [ -z "$MK_PATH" ]; then
-            MK_PATH="Makefile"
+            # Auto-detect: find the Makefile containing PKG_VERSION
+            MK_PATH=$(grep -rl 'PKG_VERSION:=' --include='Makefile' . | head -1)
+            if [ -z "$MK_PATH" ]; then
+              echo "ERROR: Could not auto-detect a Makefile with PKG_VERSION"
+              exit 1
+            fi
+            # Normalize path (strip leading ./)
+            MK_PATH="${MK_PATH#./}"
           fi
 
           # ── read PKG_VERSION from the Makefile ────────────────────────────────
