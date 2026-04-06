@@ -5,6 +5,7 @@
 # Re-usable for any OpenWrt package:
 #   - Set `pkg_name` input to override the repo-name default
 #   - Set `makefile_path` input to point at a Makefile in a subdirectory
+#                         leave empty to auto-detect from the repo
 #   - Set `force_release` to publish even when the version hasn't changed
 #
 
@@ -18,15 +19,15 @@ on:
       branch:
         description: "Branch to build from (master or main)"
         required: false
-        default: "master"
+        default: "main"
       pkg_name:
         description: "Package name (default: repo name)"
         required: false
         default: ""
       makefile_path:
-        description: "Path to Makefile relative to repo root (default: Makefile)"
+        description: "Path to Makefile relative to repo root (leave empty to auto-detect)"
         required: false
-        default: "luci-app-3ginfo-lite/Makefile"
+        default: ""
 
   push:
     branches:
@@ -68,7 +69,7 @@ jobs:
           # ── resolve makefile path ─────────────────────────────────────────────
           MK_PATH="${{ inputs.makefile_path }}"
           if [ -z "$MK_PATH" ]; then
-            # Auto-detect: find the Makefile containing PKG_VERSION
+            # Auto-detect: find the first Makefile containing PKG_VERSION
             MK_PATH=$(grep -rl 'PKG_VERSION:=' --include='Makefile' . | head -1)
             if [ -z "$MK_PATH" ]; then
               echo "ERROR: Could not auto-detect a Makefile with PKG_VERSION"
@@ -77,6 +78,7 @@ jobs:
             # Normalize path (strip leading ./)
             MK_PATH="${MK_PATH#./}"
           fi
+          echo "Using Makefile: $MK_PATH"
 
           # ── read PKG_VERSION from the Makefile ────────────────────────────────
           PKG_VER=$(grep -oP 'PKG_VERSION:=\K.*' "$MK_PATH" | head -1)
@@ -89,14 +91,14 @@ jobs:
           echo "pkg_name=$PKG_NAME"     >> $GITHUB_OUTPUT
           echo "makefile_path=$MK_PATH" >> $GITHUB_OUTPUT
           echo "pkg_version=$TAG"       >> $GITHUB_OUTPUT
-          echo "This version : $TAG"
+          echo "Detected: pkg=$PKG_NAME  makefile=$MK_PATH  version=$TAG"
 
       - name: Generate release notes
         id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.version.outputs.pkg_version }}"
-          # Only consider tags that match our versioning scheme (v1.x.x)
-          # to avoid picking up old Argon fork tags (v2.x)
           LATEST_TAG=$(gh release list --limit 10 --json tagName -q '.[].tagName' \
             | grep -v "^${TAG}$" | head -1 || true)
 
@@ -146,24 +148,30 @@ jobs:
             sdk_url:     "https://archive.openwrt.org/releases/24.10.0/targets/x86/64/openwrt-sdk-24.10.0-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
             sdk_dir:     "sdk"
             out_dir:     "output"
-            pkg_glob:    "*.ipk"
+            pkg_ext:     "ipk"
 
           - label:       "APK — OpenWrt 25.12.1"
             sdk_version: "25.12.1"
             sdk_url:     "https://archive.openwrt.org/releases/25.12.1/targets/x86/64/openwrt-sdk-25.12.1-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst"
             sdk_dir:     "sdk-apk"
             out_dir:     "output-apk"
-            pkg_glob:    "*.apk *.ipk"
+            pkg_ext:     "apk ipk"
 
     env:
-      PKG_NAME:      ${{ needs.job_check.outputs.pkg_name }}
-      MK_PATH:       ${{ needs.job_check.outputs.makefile_path }}
-      SDK_DIR:       ${{ matrix.sdk_dir }}
-      OUT_DIR:       ${{ matrix.out_dir }}
+      PKG_NAME: ${{ needs.job_check.outputs.pkg_name }}
+      MK_PATH:  ${{ needs.job_check.outputs.makefile_path }}
+      SDK_DIR:  ${{ matrix.sdk_dir }}
+      OUT_DIR:  ${{ matrix.out_dir }}
+      BRANCH:   ${{ inputs.branch || github.ref_name }}
 
     steps:
       - name: Install build dependencies
         run: |
+          # Install newer CMake (3.31+) required by some LuCI feed packages
+          wget -qO /tmp/cmake-install.sh https://cmake.org/files/v3.31/cmake-3.31.7-linux-x86_64.sh
+          sudo sh /tmp/cmake-install.sh --prefix=/usr/local --skip-license --exclude-subdir
+          cmake --version
+
           sudo -E apt-get -qq update
           sudo -E apt-get -qq install --no-install-recommends \
             zstd build-essential clang flex bison g++ gawk \
@@ -178,7 +186,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ matrix.sdk_dir }}
-          key: openwrt-sdk-${{ matrix.sdk_version }}-x86-64-v2
+          key: openwrt-sdk-${{ matrix.sdk_version }}-x86-64-v3
 
       - name: Download & bootstrap SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
@@ -189,61 +197,58 @@ jobs:
           tar --zstd -xf "$FILE" -C "$SDK_DIR" --strip-components=1
 
           cd "$SDK_DIR"
-          echo "src-git base https://github.com/openwrt/openwrt.git;main"               >  feeds.conf
-          echo "src-git-full packages https://github.com/openwrt/packages.git;master"   >> feeds.conf
+          echo "src-git-full packages https://github.com/openwrt/packages.git;master"   >  feeds.conf
           echo "src-git-full luci https://github.com/openwrt/luci.git;master"           >> feeds.conf
           echo "src-git-full routing https://git.openwrt.org/feed/routing.git;master"   >> feeds.conf
 
-          git clone -b "$BRANCH" \
-            "https://github.com/${{ github.repository }}.git" \
-            "package/downloads/$PKG_NAME"
-
           ./scripts/feeds update -a
-          echo "CONFIG_PACKAGE_${PKG_NAME}=m" > .config
+
+      - name: Clone / update package source
+        run: |
+          PKG_DIR="$SDK_DIR/package/downloads/$PKG_NAME"
+
+          if [ -d "$PKG_DIR/.git" ]; then
+            # Cache hit — just pull latest
+            git -C "$PKG_DIR" fetch origin "$BRANCH"
+            git -C "$PKG_DIR" reset --hard "origin/$BRANCH"
+          else
+            git clone --depth=1 -b "$BRANCH" \
+              "https://github.com/${{ github.repository }}.git" \
+              "$PKG_DIR"
+          fi
+
+          # If Makefile is in a subdirectory, promote it to the package root
+          # e.g. MK_PATH=luci-app-3ginfo-lite/Makefile → subdir=luci-app-3ginfo-lite
+          if [ "$MK_PATH" != "Makefile" ]; then
+            PKG_SUBDIR=$(dirname "$MK_PATH")
+            cp -a "$PKG_DIR/$PKG_SUBDIR/." "$PKG_DIR/"
+          fi
+
+      - name: Install feeds & configure
+        run: |
+          cd "$SDK_DIR"
           ./scripts/feeds install -d n "$PKG_NAME"
-          make download -j$(nproc)
 
-      - name: Update package source (cache hit)
-        if: steps.cache-sdk.outputs.cache-hit == 'true'
-        run: |
-          cd "$SDK_DIR/package/downloads/$PKG_NAME"
-          git fetch origin "$BRANCH"
-          git reset --hard "origin/$BRANCH"
+          echo "CONFIG_ALL_NONSHARED=n"       >  .config
+          echo "CONFIG_ALL_KMODS=n"           >> .config
+          echo "CONFIG_ALL=n"                 >> .config
+          echo "CONFIG_AUTOREMOVE=n"          >> .config
+          echo "CONFIG_LUCI_LANG_zh_Hans=y"   >> .config
+          echo "CONFIG_PACKAGE_${PKG_NAME}=m" >> .config
+          make defconfig
 
-      - name: Relocate package source (if Makefile is in a subdirectory)
-        if: env.MK_PATH != 'Makefile'
-        run: |
-          # The Makefile lives in a subdirectory of the cloned repo
-          # e.g. MK_PATH=luci-app-3ginfo-lite/Makefile
-          # → PKG_DIR = luci-app-3ginfo-lite
-          PKG_SUBDIR=$(dirname "$MK_PATH")
-          SRC="$SDK_DIR/package/downloads/$PKG_NAME/$PKG_SUBDIR"
-          DST="$SDK_DIR/package/downloads/$PKG_NAME"
-          # Move the subdirectory contents up to where the SDK expects them
-          cp -a "$SRC/." "$DST/"
-
-      - name: Configure & build
+      - name: Build package
         id: compile
         run: |
           cd "$SDK_DIR"
-          ./scripts/feeds install "$PKG_NAME"
-
-          echo "CONFIG_ALL_NONSHARED=n"             >  .config
-          echo "CONFIG_ALL_KMODS=n"                 >> .config
-          echo "CONFIG_ALL=n"                       >> .config
-          echo "CONFIG_AUTOREMOVE=n"                >> .config
-          echo "CONFIG_LUCI_LANG_zh_Hans=y"         >> .config
-          echo "CONFIG_PACKAGE_${PKG_NAME}=m"       >> .config
-          make defconfig
-
-          make package/${PKG_NAME}/clean -j$(nproc)
-          make package/${PKG_NAME}/compile -j$(nproc) \
-            || make package/${PKG_NAME}/compile -j1 V=s
+          make package/${PKG_NAME}/clean   V=s -j$(nproc) 2>/dev/null || true
+          make package/${PKG_NAME}/compile V=s -j$(nproc) \
+            || make package/${PKG_NAME}/compile V=s -j1
 
           cd ..
           mkdir -p "$OUT_DIR"
-          for GLOB in ${{ matrix.pkg_glob }}; do
-            find "$SDK_DIR/bin/packages/" -name "${PKG_NAME}${GLOB}" \
+          for EXT in ${{ matrix.pkg_ext }}; do
+            find "$SDK_DIR/bin/packages/" -name "${PKG_NAME}_*.${EXT}" \
               -exec cp {} "$OUT_DIR/" \; 2>/dev/null || true
           done
 
