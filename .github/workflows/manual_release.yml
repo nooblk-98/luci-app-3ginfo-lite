@@ -26,7 +26,7 @@ on:
       makefile_path:
         description: "Path to Makefile relative to repo root (default: Makefile)"
         required: false
-        default: "Makefile"
+        default: "./luci-app-3ginfo-lite/Makefile"
 
   push:
     branches:
