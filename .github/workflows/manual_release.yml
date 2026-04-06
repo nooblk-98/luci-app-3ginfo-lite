@@ -145,7 +145,7 @@ jobs:
         include:
           - label:       "IPK — OpenWrt 24.10.5"
             sdk_version: "24.10.5"
-            sdk_url:     "https://archive.openwrt.org/releases/24.10.5/targets/x86/64/openwrt-sdk-24.10.5-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
+            sdk_url:     "https://archive.openwrt.org/releases/24.10.5/targets/qualcommax/ipq807x/openwrt-sdk-24.10.5-qualcommax-ipq807x_gcc-13.3.0_musl.Linux-x86_64.tar.zst"
             sdk_dir:     "sdk"
             out_dir:     "output"
             pkg_ext:     "ipk"
@@ -186,7 +186,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ matrix.sdk_dir }}
-          key: openwrt-sdk-${{ matrix.sdk_version }}-x86-64-v3
+          key: openwrt-sdk-${{ matrix.sdk_version }}-x86-64-v4
 
       - name: Download & bootstrap SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
@@ -227,7 +227,9 @@ jobs:
       - name: Install feeds & configure
         run: |
           cd "$SDK_DIR"
-          ./scripts/feeds install -d n "$PKG_NAME"
+          # Install all feed packages so transitive deps (ucode, lucihttp, rpcd-mod-luci, …)
+          # have their headers available when the target package compiles
+          ./scripts/feeds install -a
 
           echo "CONFIG_ALL_NONSHARED=n"       >  .config
           echo "CONFIG_ALL_KMODS=n"           >> .config
@@ -241,6 +243,8 @@ jobs:
         id: compile
         run: |
           cd "$SDK_DIR"
+          # Pre-build ucode so its headers are staged before any LuCI package needs them
+          make package/ucode/compile V=s -j$(nproc) 2>/dev/null || true
           make package/${PKG_NAME}/clean   V=s -j$(nproc) 2>/dev/null || true
           make package/${PKG_NAME}/compile V=s -j$(nproc) \
             || make package/${PKG_NAME}/compile V=s -j1
