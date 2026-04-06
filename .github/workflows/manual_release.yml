@@ -18,7 +18,7 @@ on:
       branch:
         description: "Branch to build from (master or main)"
         required: false
-        default: "main"
+        default: "master"
       pkg_name:
         description: "Package name (default: repo name)"
         required: false
@@ -203,13 +203,17 @@ jobs:
           git fetch origin "$BRANCH"
           git reset --hard "origin/$BRANCH"
 
-      - name: Sync custom Makefile (if not repo root)
+      - name: Relocate package source (if Makefile is in a subdirectory)
         if: env.MK_PATH != 'Makefile'
         run: |
-          # For packages whose Makefile lives in a subdirectory of the source repo,
-          # copy it into the SDK package download dir so the SDK picks it up.
-          SRC_DIR="$SDK_DIR/package/downloads/$PKG_NAME"
-          cp "$SDK_DIR/package/downloads/$PKG_NAME/$MK_PATH" "$SRC_DIR/Makefile"
+          # The Makefile lives in a subdirectory of the cloned repo
+          # e.g. MK_PATH=luci-app-3ginfo-lite/Makefile
+          # → PKG_DIR = luci-app-3ginfo-lite
+          PKG_SUBDIR=$(dirname "$MK_PATH")
+          SRC="$SDK_DIR/package/downloads/$PKG_NAME/$PKG_SUBDIR"
+          DST="$SDK_DIR/package/downloads/$PKG_NAME"
+          # Move the subdirectory contents up to where the SDK expects them
+          cp -a "$SRC/." "$DST/"
 
       - name: Configure & build
         id: compile
