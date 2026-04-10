@@ -24,8 +24,8 @@ permissions:
   contents: write
 
 env:
-  PACKAGE_NAME: luci-app-3ginfo-lite
-  PACKAGE_DIR: luci-app-3ginfo-lite
+  OWRT_PKG_NAME: luci-app-3ginfo-lite
+  REPO_PKG_DIR: luci-app-3ginfo-lite
   SDK_DIR: ${{ github.workspace }}/openwrt-sdk
   SDK_URL: https://archive.openwrt.org/releases/24.10.5/targets/x86/64/openwrt-sdk-24.10.5-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
 
@@ -41,11 +41,11 @@ jobs:
       - name: Read package version
         id: meta
         run: |
-          PKG_VERSION=$(sed -n 's/^PKG_VERSION:=//p' "$PACKAGE_DIR/Makefile" | head -n1)
-          PKG_RELEASE=$(sed -n 's/^PKG_RELEASE:=//p' "$PACKAGE_DIR/Makefile" | head -n1)
+          PKG_VERSION=$(sed -n 's/^PKG_VERSION:=//p' "$REPO_PKG_DIR/Makefile" | head -n1)
+          PKG_RELEASE=$(sed -n 's/^PKG_RELEASE:=//p' "$REPO_PKG_DIR/Makefile" | head -n1)
 
           if [ -z "$PKG_VERSION" ] || [ -z "$PKG_RELEASE" ]; then
-            echo "Could not read PKG_VERSION or PKG_RELEASE from $PACKAGE_DIR/Makefile"
+            echo "Could not read PKG_VERSION or PKG_RELEASE from $REPO_PKG_DIR/Makefile"
             exit 1
           fi
 
@@ -94,8 +94,8 @@ jobs:
 
       - name: Stage local package
         run: |
-          mkdir -p "$SDK_DIR/package/$PACKAGE_NAME"
-          rsync -a --delete "$GITHUB_WORKSPACE/$PACKAGE_DIR/" "$SDK_DIR/package/$PACKAGE_NAME/"
+          mkdir -p "$SDK_DIR/package/$OWRT_PKG_NAME"
+          rsync -a --delete "$GITHUB_WORKSPACE/$REPO_PKG_DIR/" "$SDK_DIR/package/$OWRT_PKG_NAME/"
 
       - name: Configure SDK
         working-directory: ${{ env.SDK_DIR }}
@@ -105,21 +105,21 @@ jobs:
           CONFIG_ALL_KMODS=n
           CONFIG_ALL=n
           CONFIG_AUTOREMOVE=n
-          CONFIG_PACKAGE_${PACKAGE_NAME}=m
+          CONFIG_PACKAGE_${OWRT_PKG_NAME}=m
           EOF
           make defconfig
 
       - name: Build package only
         working-directory: ${{ env.SDK_DIR }}
         run: |
-          make package/$PACKAGE_NAME/clean V=s || true
-          make package/$PACKAGE_NAME/compile -j"$(nproc)" V=s \
-            || make package/$PACKAGE_NAME/compile -j1 V=s
+          make package/$OWRT_PKG_NAME/clean V=s || true
+          make package/$OWRT_PKG_NAME/compile -j"$(nproc)" V=s \
+            || make package/$OWRT_PKG_NAME/compile -j1 V=s
 
       - name: Collect IPK
         run: |
           mkdir -p "$RUNNER_TEMP/ipk"
-          find "$SDK_DIR/bin/packages" -type f -name "${PACKAGE_NAME}_*.ipk" -exec cp {} "$RUNNER_TEMP/ipk/" \;
+          find "$SDK_DIR/bin/packages" -type f -name "${OWRT_PKG_NAME}_*.ipk" -exec cp {} "$RUNNER_TEMP/ipk/" \;
 
           if ! find "$RUNNER_TEMP/ipk" -maxdepth 1 -type f -name "*.ipk" | grep -q .; then
             echo "No IPK package was produced"
@@ -131,7 +131,7 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PACKAGE_NAME }}-${{ steps.meta.outputs.pkg_version }}
+          name: ${{ env.OWRT_PKG_NAME }}-${{ steps.meta.outputs.pkg_version }}
           path: ${{ runner.temp }}/ipk/*.ipk
           if-no-files-found: error
           retention-days: 14
@@ -141,9 +141,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.release_tag }}
-          name: ${{ env.PACKAGE_NAME }} ${{ steps.meta.outputs.pkg_version }}
+          name: ${{ env.OWRT_PKG_NAME }} ${{ steps.meta.outputs.pkg_version }}
           body: |
-            Automated package build for `${{ env.PACKAGE_NAME }}`.
+            Automated package build for `${{ env.OWRT_PKG_NAME }}`.
 
             Source commit: `${{ github.sha }}`
             OpenWrt SDK: `${{ env.SDK_URL }}`
