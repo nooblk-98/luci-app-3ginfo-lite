@@ -65,11 +65,13 @@ jobs:
             sdk_version: 24.10.5
             sdk_url: https://archive.openwrt.org/releases/24.10.5/targets/x86/64/openwrt-sdk-24.10.5-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
             output_exts: "ipk"
+            required_ext: ipk
             artifact_suffix: ipk
           - label: APK (OpenWrt 25.12.1)
             sdk_version: 25.12.1
             sdk_url: https://archive.openwrt.org/releases/25.12.1/targets/x86/64/openwrt-sdk-25.12.1-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
             output_exts: "apk ipk"
+            required_ext: apk
             artifact_suffix: apk
 
     env:
@@ -146,12 +148,15 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/out-${{ matrix.artifact_suffix }}"
           for EXT in ${{ matrix.output_exts }}; do
-            find "$SDK_DIR/bin/packages" -type f -name "${OWRT_PKG_NAME}_*.${EXT}" \
+            find "$SDK_DIR/bin/packages" -type f \
+              \( -name "${OWRT_PKG_NAME}_*.${EXT}" -o -name "${OWRT_PKG_NAME}-*.${EXT}" \) \
               -exec cp {} "$RUNNER_TEMP/out-${{ matrix.artifact_suffix }}/" \;
           done
 
-          if ! find "$RUNNER_TEMP/out-${{ matrix.artifact_suffix }}" -maxdepth 1 -type f | grep -q .; then
-            echo "No package files were produced for ${{ matrix.label }}"
+          if ! find "$RUNNER_TEMP/out-${{ matrix.artifact_suffix }}" -maxdepth 1 -type f -name "*.${{ matrix.required_ext }}" | grep -q .; then
+            echo "No .${{ matrix.required_ext }} package was produced for ${{ matrix.label }}"
+            echo "Debug: available files from SDK output path"
+            find "$SDK_DIR/bin/packages" -type f | sed -n '1,200p'
             exit 1
           fi
 
