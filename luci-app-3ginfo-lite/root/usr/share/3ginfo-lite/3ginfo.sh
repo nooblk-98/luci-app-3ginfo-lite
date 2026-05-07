@@ -183,7 +183,7 @@ fi
 
 O=""
 if [ -e /usr/bin/sms_tool ]; then
-	O=$(sms_tool -D -d $DEVICE at "AT+CPIN?;+CSQ;+COPS=3,0;+COPS?;+COPS=3,2;+COPS?;+CREG=2;+CREG?")
+	O=$(sms_tool -D -d $DEVICE at "AT+CSQ;+COPS=3,0;+COPS?;+COPS=3,2;+COPS?;+CREG=2;+CREG?;+CPIN?")
 else
 	O=$(gcom -d $DEVICE -s $RES/info.gcom 2>/dev/null)
 fi
@@ -409,6 +409,7 @@ case "$MODE_NUM" in
 	5*) MODE="HSUPA";;
 	6*) MODE="HSPA";;
 	7*) MODE="LTE";;
+	16*) MODE="LTE";; # returned by FG621 in LTE-A mode
 	 *) MODE="-";;
 esac
 
