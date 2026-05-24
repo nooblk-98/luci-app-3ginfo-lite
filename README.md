@@ -42,14 +42,50 @@ Forked from [modemdata](https://github.com/obsy/modemdata) by Cezary Jackiewicz.
 
 ### Using the IPK/APK package
 
-Download the latest release from the [releases page](https://github.com/4IceG/luci-app-3ginfo-lite/releases) and install:
+Download the latest `.ipk` or `.apk` package from the [releases page](https://github.com/nooblk-98/luci-app-3ginfo-lite/releases), then follow the steps below for your OpenWrt version.
+
+#### Method 1 — Direct download on the router
+
+SSH into your router and download the package directly:
 
 ```bash
-# For IPK-based systems (OpenWrt)
-opkg install luci-app-3ginfo-lite*.ipk
+# Set the release tag (check the releases page for the latest)
+TAG=v1.0.8-20250609
 
-# For APK-based systems (OpenWrt main)
-apk add luci-app-3ginfo-lite*.apk
+# Download the IPK or APK package
+wget https://github.com/nooblk-98/luci-app-3ginfo-lite/releases/download/$TAG/luci-app-3ginfo-lite-*.ipk
+# or
+wget https://github.com/nooblk-98/luci-app-3ginfo-lite/releases/download/$TAG/luci-app-3ginfo-lite-*.apk
+```
+
+Then install as described below.
+
+#### Method 2 — Copy from your computer
+
+Use `scp` to copy the file to the router:
+
+```bash
+scp luci-app-3ginfo-lite-*.ipk root@192.168.1.1:/tmp/
+# or
+scp luci-app-3ginfo-lite-*.apk root@192.168.1.1:/tmp/
+```
+
+Then SSH into the router and install.
+
+#### Install the package
+
+**IPK-based systems (OpenWrt 21.02–24.10)**
+
+```bash
+opkg install /tmp/luci-app-3ginfo-lite-*.ipk
+```
+
+**APK-based systems (OpenWrt main / 25.x+)**
+
+Custom packages not signed by the official OpenWrt repository require the `--allow-untrusted` flag:
+
+```bash
+apk add --allow-untrusted /tmp/luci-app-3ginfo-lite-*.apk
 ```
 
 ### Building from source
