@@ -1,8 +1,8 @@
 # 3ginfo-lite
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/4IceG/luci-app-3ginfo-lite?style=flat-square)](https://github.com/4IceG/luci-app-3ginfo-lite/releases)
-[![GitHub stars](https://img.shields.io/github/stars/4IceG/luci-app-3ginfo-lite?style=flat-square)](https://github.com/4IceG/luci-app-3ginfo-lite/stargazers)
-[![GitHub downloads](https://img.shields.io/github/downloads/4IceG/luci-app-3ginfo-lite/total?style=flat-square)](https://github.com/4IceG/luci-app-3ginfo-lite/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/nooblk-98/luci-app-3ginfo-lite?style=flat-square)](https://github.com/nooblk-98/luci-app-3ginfo-lite/releases)
+[![GitHub stars](https://img.shields.io/github/stars/nooblk-98/luci-app-3ginfo-lite?style=flat-square)](https://github.com/nooblk-98/luci-app-3ginfo-lite/stargazers)
+[![GitHub downloads](https://img.shields.io/github/downloads/nooblk-98/luci-app-3ginfo-lite/total?style=flat-square)](https://github.com/nooblk-98/luci-app-3ginfo-lite/releases)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 
 > **LuCI** application for monitoring 3G/4G/5G mobile broadband connections on OpenWrt routers. Displays real-time signal quality, network parameters, operator info, and cell details for mPCI-E, M.2, and USB modems.
